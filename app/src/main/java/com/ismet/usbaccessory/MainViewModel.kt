@@ -15,9 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-private const val ENCODE_RADIX = 16
-private const val CO2_TRIMMED_REQUEST = "FE440008029F25"
-
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val coroutineDispatcher: CoroutineDispatcher
@@ -25,8 +22,8 @@ class MainViewModel @Inject constructor(
 
     private val diversities = mapOf(
         "/5J1R" to ResponseDiversity(
-            delayFrom = 20,
-            delayTo = 120,
+            delayFrom = 120,
+            delayTo = 420,
             responses = listOf("@5J001 ", "@5J101 ").map(String::encodeToByteArray)
         ),
         "/5J5R" to ResponseDiversity(
@@ -34,7 +31,7 @@ class MainViewModel @Inject constructor(
             delayTo = 3000,
             responses = listOf("@5J101 ").map(String::encodeToByteArray)
         ),
-        CO2_TRIMMED_REQUEST to ResponseDiversity(
+        "�D\u0000\b\u0002�%" to ResponseDiversity(
             delayFrom = 600,
             delayTo = 1300,
             responses = listOf(
@@ -74,27 +71,19 @@ class MainViewModel @Inject constructor(
     fun onDataReceived(bytes: ByteArray) {
         readJob?.cancel()
         readJob = viewModelScope.launch(coroutineDispatcher) {
-            val request = bytes.mapToString()
+            val request = bytes.decodeToString()
+            Log.e("Oops", request)
             val diversity = diversities[request]!!
-            val historyRecord = diversity.randomHistoryRecord(request) {
-                if (request == CO2_TRIMMED_REQUEST) {
-                    it.mapToString()
-                } else {
-                    it.decodeToString()
-                }
-            }
-            Log.e("Oops", "random response: \"$historyRecord\"")
+            val historyRecord = diversity.randomHistoryRecord(request)
             history.value +=  historyRecord
             delay(historyRecord.delay)
-            history.value = history.value.toMutableList().apply {
-                removeLast()
-                add(historyRecord.copy(isFailed = false))
-            }
-
             try {
-                usbHost?.getFromUsb(historyRecord.responseByteArray)
+                usbHost?.getFromUsb(historyRecord.response.encodeToByteArray())
             } catch (_: RemoteException) {
                 //ignore
+            }
+            history.value = history.value.toMutableList().apply {
+                this[lastIndex] = historyRecord.copy(isFailed = false)
             }
         }
     }
@@ -103,14 +92,6 @@ class MainViewModel @Inject constructor(
         listOf(0xFE, 0x44, 0x00, value1, value2, value1 + 10, value2 + 10)
             .map { it.toByte() }
             .toByteArray()
-
-    private fun ByteArray.mapToString(): String = when(size) {
-        7 -> joinToString(separator = "") {
-            val encoded = (it.toInt() and 0xFF).toString(ENCODE_RADIX)
-            if (encoded.length < 2) "0$encoded" else encoded
-        }.uppercase()
-        else -> decodeToString()
-    }
 
     private fun Int.toHeaterResponse() = "@5,0(0,0,0,0),${this},25,25,25,25"
 }
