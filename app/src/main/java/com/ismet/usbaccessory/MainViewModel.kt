@@ -15,6 +15,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+private const val RANDOM_REQUEST = "Random"
+
 @HiltViewModel
 class MainViewModel @Inject constructor(
     private val coroutineDispatcher: CoroutineDispatcher
@@ -29,7 +31,7 @@ class MainViewModel @Inject constructor(
         "/5J5R" to ResponseDiversity(
             delayFrom = 1000,
             delayTo = 3000,
-            responses = listOf("@5J101 ").map(String::encodeToByteArray)
+            responses = listOf("@5J101 ", "@5J001 ").map(String::encodeToByteArray)
         ),
         "FE440008029F25" to ResponseDiversity(
             delayFrom = 600,
@@ -63,6 +65,11 @@ class MainViewModel @Inject constructor(
             delayTo = 1000,
             responses = listOf("").map(String::encodeToByteArray)
         ),
+        RANDOM_REQUEST to ResponseDiversity(
+            delayFrom = 2000,
+            delayTo = 4500,
+            responses = List(4) { "test$it" }.map(String::encodeToByteArray)
+        )
     )
     private var readJob: Job? = null
     var usbHost: UsbHost? = null
@@ -72,7 +79,7 @@ class MainViewModel @Inject constructor(
         readJob?.cancel()
         readJob = viewModelScope.launch(coroutineDispatcher) {
             val request = bytes.decodeToStringEnhanced()
-            val diversity = diversities[request]!!
+            val diversity = diversities[request] ?: diversities[RANDOM_REQUEST]!!
             val historyRecord = diversity.randomHistoryRecord(request)
             Log.e("Oops", historyRecord.toString())
             history.value +=  historyRecord
