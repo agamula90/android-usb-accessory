@@ -31,7 +31,7 @@ class MainViewModel @Inject constructor(
             delayTo = 3000,
             responses = listOf("@5J101 ").map(String::encodeToByteArray)
         ),
-        "�D\u0000\b\u0002�%" to ResponseDiversity(
+        "FE440008029F25" to ResponseDiversity(
             delayFrom = 600,
             delayTo = 1300,
             responses = listOf(
@@ -71,19 +71,19 @@ class MainViewModel @Inject constructor(
     fun onDataReceived(bytes: ByteArray) {
         readJob?.cancel()
         readJob = viewModelScope.launch(coroutineDispatcher) {
-            val request = bytes.decodeToString()
-            Log.e("Oops", request)
+            val request = bytes.decodeToStringEnhanced()
             val diversity = diversities[request]!!
             val historyRecord = diversity.randomHistoryRecord(request)
+            Log.e("Oops", historyRecord.toString())
             history.value +=  historyRecord
             delay(historyRecord.delay)
             try {
-                usbHost?.getFromUsb(historyRecord.response.encodeToByteArray())
+                usbHost?.getFromUsb(historyRecord.response)
             } catch (_: RemoteException) {
                 //ignore
             }
             history.value = history.value.toMutableList().apply {
-                this[lastIndex] = historyRecord.copy(isFailed = false)
+                this[lastIndex] = historyRecord.toSuccess()
             }
         }
     }
@@ -93,5 +93,18 @@ class MainViewModel @Inject constructor(
             .map { it.toByte() }
             .toByteArray()
 
-    private fun Int.toHeaterResponse() = "@5,0(0,0,0,0),${this},25,25,25,25"
+    private fun Int.toHeaterResponse() = "@5,0(0,0,0,0),25,${this},25,25,25"
+}
+
+fun ByteArray.decodeToStringEnhanced() = when {
+    this.size != 7 -> decodeToString()
+    this[0] != 0xFE.toByte() || this[1] != 0x44.toByte() -> decodeToString()
+    else -> joinToString(separator = "") {
+        val value = (0xFF and it.toInt()).toString(radix = 16)
+        if (value.length != 2) {
+            "0" + value.uppercase()
+        } else {
+            value.uppercase()
+        }
+    }
 }
