@@ -26,12 +26,12 @@ class MainViewModel @Inject constructor(
         "/5J1R" to ResponseDiversity(
             delayFrom = 120,
             delayTo = 420,
-            responses = listOf("@5J001 ", "@5J101 ").map(String::encodeToByteArray)
+            responses = listOf("@5J001", "@5J101").map(String::encodeToByteArray)
         ),
         "/5J5R" to ResponseDiversity(
             delayFrom = 1000,
             delayTo = 3000,
-            responses = listOf("@5J101 ", "@5J001 ").map(String::encodeToByteArray)
+            responses = listOf("@5J101", "@5J001").map(String::encodeToByteArray)
         ),
         "FE440008029F25" to ResponseDiversity(
             delayFrom = 600,
