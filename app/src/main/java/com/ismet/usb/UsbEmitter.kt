@@ -1,8 +1,8 @@
 package com.ismet.usb
 
-import kotlinx.coroutines.channels.Channel
+import androidx.compose.runtime.mutableStateListOf
+import com.ismet.usbaccessory.model.HistoryRecord
 
 class UsbEmitter {
-    val readEvents = Channel<ByteArray>(Channel.UNLIMITED)
-    val connectionEvents = Channel<Boolean>(Channel.UNLIMITED)
+    val historyRecords = mutableStateListOf<HistoryRecord>()
 }
