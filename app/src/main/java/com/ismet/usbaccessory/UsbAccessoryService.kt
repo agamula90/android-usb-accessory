@@ -58,7 +58,7 @@ class UsbAccessoryService : Service() {
 
     override fun onBind(intent: Intent): IBinder {
         val bindIntent =
-            Intent("com.ismet.usb.host").apply { `package` = "com.ismet.usbterminalnew" }
+            Intent("com.ismet.usb.host").apply { `package` = "com.ismet.usbterminalnew3" }
         bindService(bindIntent, sendToUsbConnection, Context.BIND_AUTO_CREATE)
         return binder
     }

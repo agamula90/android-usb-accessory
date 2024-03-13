@@ -3,8 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.ismet.usbaccessory">
 
+    <permission android:name="com.ismet.usbaccessory.ISMET_USB_ACCESSORY"
+        android:label="UsbAccessory"
+        android:description="@string/usb_accessory_service_description"
+        android:protectionLevel="dangerous"/>
+
     <application
-        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -16,7 +20,8 @@
         <service
             android:name="com.ismet.usbaccessory.UsbAccessoryService"
             android:enabled="true"
-            android:exported="true">
+            android:exported="true"
+            android:permission="com.ismet.usbaccessory.ISMET_USB_ACCESSORY">
             <intent-filter>
                 <action android:name="com.ismet.usb.accessory" />
             </intent-filter>
